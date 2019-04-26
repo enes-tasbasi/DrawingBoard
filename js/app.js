@@ -1,6 +1,6 @@
 "use strict";
 
-class Context {
+class DrawingBoard {
   constructor() {
     this.canvas = document.querySelector("canvas");
     this.canvas.width = window.innerWidth - 4;
@@ -28,94 +28,56 @@ class Context {
     };
 
     this.clearButton.onclick = () => {
-      context.clearRect(0, 0, window.innerHeight, window.innerWidth);
+      context.clearRect(0, 0, window.innerWidth, window.innerHeight);
     };
 
-    window.addEventListener("mousedown", function(e) {
+    this.canvas.addEventListener("mousedown", downEvent);
+    this.canvas.addEventListener("mouseup", upEvent);
+    this.canvas.addEventListener("mousemove", moveEvent);
+
+    this.canvas.addEventListener("touchstart", touchStartEvent);
+    this.canvas.addEventListener("touchend", upEvent);
+    this.canvas.addEventListener("touchmove", touchMoveEvent);
+
+    function downEvent(e) {
       if (mouseDown) return;
       context.beginPath();
       context.moveTo(e.clientX, e.clientY);
       context.lineTo(e.clientX, e.clientY);
       this.mousedown = true;
-    });
+    }
 
-    window.addEventListener("mouseup", function(e) {
+    function touchStartEvent(e) {
+      if (mouseDown) return;
+      context.beginPath();
+      context.moveTo(e.touches[0].clientX, e.touches[0].clientY);
+      context.lineTo(e.touches[0].clientX, e.touches[0].clientY);
+      this.mousedown = true;
+    }
+
+    function upEvent(e) {
       this.mousedown = false;
 
       context.stroke();
       context.closePath();
-    });
+    }
 
-    window.addEventListener("mousemove", function(e) {
+    function moveEvent(e) {
       if (mouseDown) return;
       if (this.mousedown) {
         context.lineTo(e.clientX, e.clientY);
         context.stroke();
       }
-    });
+    }
+
+    function touchMoveEvent(e) {
+      if (mouseDown) return;
+      if (this.mousedown) {
+        context.lineTo(e.touches[0].clientX, e.touches[0].clientY);
+        context.stroke();
+      }
+    }
   }
 }
 
-const DB = new Context();
-
-// make the options menu movable
-
-let mouseDown = false;
-let mouseUp = false;
-
-let movable = document.querySelector(".options");
-let moveButton = document.querySelector(".move-button");
-let minimizeButton = document.querySelector(".minimize-button");
-let optionsBody = document.querySelector(".options-body");
-let style = getComputedStyle(movable);
-
-let mouseX;
-let mouseY;
-
-let elOffsetX;
-let elOffsetY;
-
-let minimized = false;
-
-document.addEventListener("mousemove", trackMouse);
-
-moveButton.addEventListener("mousedown", trackMouseInEl);
-
-minimizeButton.addEventListener("mousedown", minimize);
-
-function minimize() {
-  if (!minimized) {
-    optionsBody.style.display = "none";
-    minimized = true;
-  } else {
-    optionsBody.style.display = "inline";
-    minimized = false;
-  }
-}
-
-function trackMouseInEl(event) {
-  console.log(event);
-  elOffsetX = event.offsetX;
-  elOffsetY = event.offsetY;
-  console.log(elOffsetX, elOffsetY);
-}
-
-function trackMouse(event) {
-  mouseX = event.pageX;
-  mouseY = event.pageY;
-
-  if (mouseDown) {
-    movable.style.transform = `translate(${mouseX -
-      movable.offsetLeft -
-      228 -
-      elOffsetX}px, ${mouseY - movable.offsetTop - elOffsetY}px)`;
-  }
-}
-
-moveButton.addEventListener("mousedown", () => {
-  mouseDown = true;
-});
-
-movable.addEventListener("mouseup", () => {
-  mouseDown = false;
-});
+const DB = new DrawingBoard();
